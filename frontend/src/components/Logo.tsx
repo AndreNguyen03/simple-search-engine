@@ -5,9 +5,7 @@ interface LogoProps {
 }
 
 const Logo = ({ small = false }: LogoProps) => {
-  const logoUrl = small 
-    ? "/public/logo.png" 
-    : "/public/logo.png";
+  const logoUrl = "/logo.png" 
   
   const sizeClass = small ? "w-32 h-10" : "w-80 h-24"; // Có thể điều chỉnh
 

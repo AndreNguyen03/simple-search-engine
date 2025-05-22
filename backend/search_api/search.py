@@ -10,8 +10,10 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from search_api.models import SearchResult
+import time
 
 def search(query: str, top_k: int = 20, page: int = 1) -> List[SearchResult]:
+    start_time = time.time()
     # Lấy dữ liệu
     index_db = get_inverted_index()
     num_docs = count_documents()
@@ -21,7 +23,7 @@ def search(query: str, top_k: int = 20, page: int = 1) -> List[SearchResult]:
     tokens = preprocess_text(query, STOPWORDS_SET)
     tokens = [token for token in tokens if token in vocabulary]
     if not tokens:
-        return []
+         return [], 0, round(time.time() - start_time, 2)
 
     # TF-IDF cho truy vấn
     query_bow = Counter(tokens)
@@ -51,7 +53,7 @@ def search(query: str, top_k: int = 20, page: int = 1) -> List[SearchResult]:
 
     # Sắp xếp theo điểm
     sorted_docs = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-
+    total_matches = len(sorted_docs)
     # Phân trang
     start = (page - 1) * top_k
     end = start + top_k
@@ -60,12 +62,15 @@ def search(query: str, top_k: int = 20, page: int = 1) -> List[SearchResult]:
     results: List[SearchResult] = []
     for doc_id, score in paged_docs:
         doc = get_document(doc_id)
-        snippet = doc['content'][:200] + "..." if doc and 'content' in doc else ""
+        print(doc)
+        snippet = doc['content'][:400] + "..." if doc and 'content' in doc else ""
         results.append({
             'doc_id': doc_id,
             'url': doc.get('url', ''),
+            'title': doc.get('title', ''),
             'snippet': snippet,
             'score': round(score, 6)
         })
 
-    return results
+    elapsed_time = time.time() - start_time  # Tính thời gian
+    return results, total_matches, elapsed_time

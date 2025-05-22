@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    container_name: search-api
+    restart: always
+
+  cron:
+    build:
+      context: .
+    container_name: search-cron
+    command: ["supercronic", "/app/crontab"]
+    restart: always

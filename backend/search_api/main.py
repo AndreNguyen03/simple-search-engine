@@ -2,15 +2,29 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
 from search_api import search
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:8080",  # React app
+    # Thêm origin khác nếu cần
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Cho phép frontend nào gọi được
+    allow_credentials=True,
+    allow_methods=["*"],  # Cho phép tất cả các method (GET, POST, OPTIONS,...)
+    allow_headers=["*"],  # Cho phép tất cả headers
+)
+
 class SearchRequest(BaseModel):
-    q: str
+    query: str
     page: Optional[int] = 1
     limit: Optional[int] = 20
 
 @app.post("/search")
 def search_api(req: SearchRequest):
-    results = search.search(req.q, top_k=req.limit, page=req.page)
-    return {"query": req.q, "results": results, "page": req.page, "limit": req.limit}
+    results, total, elapsed = search.search(req.query, top_k=req.limit, page=req.page)
+    return {"query": req.query, "results": results, "page": req.page, "limit": req.limit, "total": total, "time" : round(elapsed, 3)}

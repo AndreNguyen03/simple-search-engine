@@ -2,7 +2,6 @@ import sqlite3
 import config 
 
 def get_conn():
-    print(f"[Storage] ✅ Kết nối tới database: {config.DB_PATH}")
     return sqlite3.connect(config.DB_PATH)
 
 def init_db():
@@ -12,6 +11,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS documents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 url TEXT UNIQUE,
+                title TEXT,
                 content TEXT,
                 visited INTEGER DEFAULT 0,
                 length REAL DEFAULT 0
@@ -30,13 +30,13 @@ def init_db():
 
 # ================= CRAWLER ==================
 
-def insert_document(url: str, content: str):
+def insert_document(url: str, content: str, title: str):
     try:
         conn = get_conn()
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO documents (url, content, visited) VALUES (?, ?, 1)',
-            (url, content)
+            'INSERT INTO documents (url, content, title, visited) VALUES (?, ?, ?, 1)',
+            (url, content, title)
         )
         conn.commit()
         conn.close()
@@ -47,7 +47,7 @@ def insert_document(url: str, content: str):
 def get_unvisited_documents():
     with get_conn() as conn:
         c = conn.cursor()
-        return c.execute('SELECT id, url, content FROM documents WHERE visited = 1 AND length = 0').fetchall()
+        return c.execute('SELECT id, url,title, content FROM documents WHERE visited = 1 AND length = 0').fetchall()
 
 # ================= INDEXING ==================
 
@@ -116,15 +116,16 @@ def get_inverted_index() -> dict:
 
 def get_document(doc_id: int) -> dict:
     """
-    Trả về 1 document dưới dạng dict: {'id': ..., 'url': ..., 'content': ...}
+    Trả về 1 document dưới dạng dict: {'id': ..., 'url': ..., 'title':...., 'content': ...}
     """
     with get_conn() as conn:
         c = conn.cursor()
-        row = c.execute('SELECT id, url, content FROM documents WHERE id = ?', (doc_id,)).fetchone()
+        row = c.execute('SELECT id, url,title, content FROM documents WHERE id = ?', (doc_id,)).fetchone()
         if row:
             return {
                 'id': row[0],
                 'url': row[1],
+                'title': row[2],
                 'content': row[2]
             }
         return {}
@@ -137,3 +138,36 @@ def get_doc_length(doc_id: int) -> float:
         c = conn.cursor()
         result = c.execute('SELECT length FROM documents WHERE id = ?', (doc_id,)).fetchone()
         return result[0] if result and result[0] else 0.0
+
+def upsert_index_batch(records: list[tuple[str, int, int]]):
+    """
+    records: list of (term, doc_id, freq)
+    """
+    sql = '''
+        INSERT INTO inverted_index (term, doc_id, freq, df)
+        VALUES (?, ?, ?, 1)
+        ON CONFLICT(term, doc_id)
+        DO UPDATE SET freq=excluded.freq
+    '''
+    with get_conn() as conn:
+        c = conn.cursor()
+        c.executemany(sql, records)
+        conn.commit()
+        print(f"[Storage] ✅ Đã upsert {len(records)} records vào inverted_index.")
+
+def get_df_batch(terms: list[str]) -> dict[str, int]:
+    if not terms:
+        return {}
+
+    placeholders = ','.join(['?'] * len(terms))
+    query = f'''
+        SELECT term, MAX(df) as df
+        FROM inverted_index
+        WHERE term IN ({placeholders})
+        GROUP BY term
+    '''
+    with get_conn() as conn:
+        c = conn.cursor()
+        rows = c.execute(query, terms).fetchall()
+
+    return {term: df for term, df in rows}

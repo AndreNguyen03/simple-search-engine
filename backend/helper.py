@@ -3,8 +3,8 @@ import math
 import unicodedata
 import re
 from collections import Counter
-from underthesea import word_tokenize
-
+import underthesea
+underthesea.word_tokenize("khởi động model")
 
 def tf(freq):
     return 1 + math.log(freq)
@@ -31,7 +31,7 @@ def remove_stopwords(text, stopwords_set):
 
 
 def preprocess_text(text, stopwords_set):
-    processed_text = word_tokenize(text, format='text')
+    processed_text = underthesea.word_tokenize(text, format='text')
     processed_text = processed_text.lower()
     processed_text = clean_text(processed_text)
     tokens = remove_stopwords(processed_text, stopwords_set)

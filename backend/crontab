@@ -1,0 +1,1 @@
+*/15 * * * * python crawler_indexer/run.py >> logs/run.log 2>&1

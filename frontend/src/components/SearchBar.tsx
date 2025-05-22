@@ -7,6 +7,7 @@ const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
