@@ -1,9 +1,12 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import GoogleLogo from "../components/Logo";
 import SearchBar from "../components/SearchBar";
 
 const Index = () => {
+  useEffect(() => {
+    document.title = "Vietnamnet"; // title mặc định khi ở trang chủ
+  }, []);
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 flex flex-col justify-center items-center px-4 pb-20">
