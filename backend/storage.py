@@ -126,7 +126,7 @@ def get_document(doc_id: int) -> dict:
                 'id': row[0],
                 'url': row[1],
                 'title': row[2],
-                'content': row[2]
+                'content': row[3]
             }
         return {}
     

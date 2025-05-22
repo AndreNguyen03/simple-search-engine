@@ -63,7 +63,7 @@ def search(query: str, top_k: int = 20, page: int = 1) -> List[SearchResult]:
     for doc_id, score in paged_docs:
         doc = get_document(doc_id)
         print(doc)
-        snippet = doc['content'][:400] + "..." if doc and 'content' in doc else ""
+        snippet = doc['content'][:200] + "..." if doc and 'content' in doc else ""
         results.append({
             'doc_id': doc_id,
             'url': doc.get('url', ''),

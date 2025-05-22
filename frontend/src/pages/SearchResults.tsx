@@ -32,6 +32,14 @@ const SearchResults = () => {
     time,
   } = useSearch();
 
+  useEffect(() => {
+    if (query) {
+      document.title = `${query} - Vietnamnet`;
+    } else {
+      document.title = `Vietnamnet`;
+    }
+  }, [query]);
+
   // Gọi API khi query thay đổi
   useEffect(() => {
     if (query) {
@@ -117,13 +125,14 @@ const SearchResults = () => {
               <div className="space-y-6">
                 {results.map((result, index) => (
                   <div key={index} className="max-w-2xl">
-                    <div className="text-xs text-gray-600 mb-1">{result.url}</div>
                     <a
                       href={result.url}
                       className="text-xl text-blue-800 hover:underline font-medium block mb-1"
                     >
                       {result.title}
                     </a>
+                    <a href={result.url} className="text-xs text-gray-600 mb-2 block hover:underline">{result.url}</a>
+
                     <p className="text-sm text-gray-700 mb-2">{result.snippet}</p>
 
                     {result.categories && (
