@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: test-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+  crawler_indexer:
+    build:
+      context: ./crawler_indexer
+      dockerfile: Dockerfile
+    container_name: crawler_indexer
+    restart: unless-stopped
+    networks:
+      - backend
+    volumes:
+      - ./crawler_indexer:/app
+    depends_on:
+      - postgres
+
+  search_api:
+    build:
+      context: ./search_api
+      dockerfile: Dockerfile
+    container_name: search_api
+    ports:
+      - "8000:8000"  # hoặc port FastAPI nếu dùng
+    restart: unless-stopped
+    networks:
+      - backend
+    volumes:
+      - ./search_api:/app
+    depends_on:
+      - postgres
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pgdata:

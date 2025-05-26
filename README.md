@@ -1,102 +1,135 @@
-# simple-search-engine
 
-# VietnamNet SimepleSearchEngine 
+# 🔍 Search Engine Project
 
-## Mô tả chung
+Một hệ thống tìm kiếm bao gồm:
+- **Crawler/Indexer**: Thu thập và lập chỉ mục dữ liệu từ Vietnamnet.
+- **Search API**: API cung cấp khả năng tìm kiếm dữ liệu.
+- **Frontend**: Giao diện người dùng để nhập truy vấn tìm kiếm.
+- **PostgreSQL**: Cơ sở dữ liệu lưu trữ dữ liệu đã thu thập.
 
-Dự án này bao gồm 2 phần chính:  
-- **Backend:** Crawler, indexer và API tìm kiếm sử dụng FastAPI, Python  
-- **Frontend:** Giao diện web tìm kiếm React + TailwindCSS + Vite  
+## 📦 Cấu trúc thư mục
+
+```
+.
+├── backend/
+│   ├── crawler_indexer/      # Crawler và Indexer
+│   └── search_api/           # FastAPI Search API
+├── frontend/                 # Ứng dụng frontend (Vite + Bun/Node)
+├── docker-compose.yml        # Định nghĩa các service Docker
+└── README.md
+```
+
+## 🚀 Khởi chạy dự án với Docker Compose
+
+> Yêu cầu: Docker & Docker Compose đã được cài đặt sẵn.
+
+Chạy tất cả các service với:
+
+```bash
+docker-compose up --build
+```
+
+Quá trình này sẽ:
+- Tải image PostgreSQL (nếu chưa có).
+- Build từng Dockerfile cho `crawler_indexer`, `search_api` và `frontend`.
+- Khởi chạy hệ thống mạng nội bộ để các service kết nối với nhau.
+
+## 🔗 Truy cập các thành phần
+
+| Thành phần       | Địa chỉ                     | Mô tả                             |
+|------------------|-----------------------------|-----------------------------------|
+| Frontend         | http://localhost:5173       | Giao diện người dùng              |
+| Search API       | http://localhost:8000/docs  | Swagger UI của Search API         |
+| PostgreSQL       | localhost:5432              | DB PostgreSQL (user: `myuser`, password: `mypassword`) |
+
+## ⚙️ Môi trường PostgreSQL
+
+```env
+POSTGRES_USER=myuser
+POSTGRES_PASSWORD=mypassword
+POSTGRES_DB=mydb
+```
+
+Volume dữ liệu sẽ được lưu trữ tại: `pgdata:/var/lib/postgresql/data`
+
+## 📂 Thông tin các service trong `docker-compose.yml`
+
+### 1. `postgres`
+- Image: `postgres:15`
+- Cổng: `5432`
+- Dữ liệu lưu trong volume: `pgdata`
+
+### 2. `crawler_indexer`
+- Đọc dữ liệu từ Vietnamnet và lập chỉ mục
+- Mount source code từ: `./backend/crawler_indexer:/app`
+- Chạy kèm sau khi PostgreSQL sẵn sàng
+
+### 3. `search_api`
+- Dựng bằng **FastAPI**
+- Expose cổng `8000`
+- Mount source code từ: `./backend/search_api:/app`
+- Có tài liệu API tại `/docs`
+
+### 4. `frontend`
+- Xây dựng từ Dockerfile Vite
+- Chạy ở chế độ preview tại cổng `5173`
+- Phụ thuộc vào `search_api`
+
+## 🧹 Dọn dẹp hệ thống
+
+Dừng và xóa toàn bộ container, mạng và volumes:
+
+```bash
+docker-compose down -v
+```
 
 ---
 
-## Cấu trúc thư mục
+## ⚡️ Chạy thủ công từng service (Không dùng Docker)
 
-```
-backend/
-├── crawler_indexer/          # Crawler và indexer dữ liệu
-│   ├── indexer/
-│   └── vietnamnet_crawler/
-├── data/                     # Database lưu trữ (SQLite)
-├── search.api/               # API tìm kiếm FastAPI
-├── requirements.txt          # Thư viện backend
-├── config.py                 # Cấu hình chung
-├── helper.py                 # Hàm hỗ trợ
-├── stopwords.py             # Bộ lọc stopwords
-├── storage.py               # Xử lý lưu trữ và truy xuất dữ liệu
-└── vietnamese-stopwords-dash.txt  # File stopwords
+### 1. Cài PostgreSQL thủ công
+- Tạo user `myuser` và database `mydb` với mật khẩu `mypassword`
+- Mở cổng `5432` nếu cần
 
-frontend/
-├── public/                   # File tĩnh
-├── src/                      # Source code React
-├── package.json              # Quản lý thư viện frontend
-├── tailwind.config.ts        # Cấu hình TailwindCSS
-├── tsconfig.json             # Cấu hình TypeScript
-├── vite.config.ts            # Cấu hình Vite
-└── ...                       # Các file cấu hình khác
-```
-
----
-
-## Hướng dẫn cài đặt và chạy
-
-### Backend
-
-1. Tạo môi trường ảo (khuyến khích):
-
+### 2. Chạy `crawler_indexer`
 ```bash
-python -m venv .venv
-source .venv/bin/activate   # Linux/macOS
-.venv\Scripts\activate      # Windows
-```
-
-2. Cài đặt thư viện:
-
-```bash
+cd backend/crawler_indexer
+python -m venv venv
+venv\Scripts\activate      # Hoặc `source venv/bin/activate` trên Linux/Mac
 pip install -r requirements.txt
+python run.py
 ```
 
-3. Chạy crawler + indexer để thu thập dữ liệu:
-
+### 3. Chạy `search_api`
 ```bash
-python -m crawler_indexer.run
+cd backend/search_api
+python -m venv venv
+venv\Scripts\activate      # Hoặc `source venv/bin/activate` trên Linux/Mac
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-4. Chạy API server:
-
+### 4. Chạy frontend (Vite)
 ```bash
-uvicorn search_api.main:app --reload
+cd frontend
+bun install                 # Hoặc `npm install`
+bun run dev                # Hoặc `npm run dev`
 ```
 
+Mặc định frontend sẽ chạy tại: http://localhost:5173
 
 ---
 
-### Frontend
+## 🛠 Troubleshooting
 
-1. Cài đặt các package:
-
-```bash
-npm install
-```
-
-2. Chạy frontend:
-
-```bash
-npm run dev
-```
+- Nếu không thấy dữ liệu, kiểm tra log của `crawler_indexer`:
+  ```bash
+  docker logs crawler_indexer
+  ```
+- Nếu port `5173`, `8000` hoặc `5432` đã bị chiếm, chỉnh sửa `docker-compose.yml` phần `ports`.
 
 ---
 
-## Công nghệ sử dụng
+## 📄 Giấy phép
 
-- Python, FastAPI, SQLite cho backend và API  
-- React, TypeScript, TailwindCSS, Vite cho frontend  
-- Crawler tự động lấy dữ liệu từ VietnamNet để lập chỉ mục tìm kiếm  
-- Inverted Index và TF-IDF cho thuật toán tìm kiếm
-
----
-
-## Ghi chú
-
-- Đảm bảo chạy crawler trước để có dữ liệu cho API tìm kiếm  
-- Cấu hình API backend và frontend có thể điều chỉnh trong file config riêng  
+MIT License.

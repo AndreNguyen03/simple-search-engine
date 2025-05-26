@@ -1,7 +1,7 @@
 import math
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import storage
+import storage_pg
 import helper
 from stopwords import STOPWORDS_SET
 
@@ -14,12 +14,12 @@ def process_doc(doc):
 
 
 def index_documents():
-    documents = storage.get_unvisited_documents()
+    documents = storage_pg.get_unvisited_documents()
     if not documents:
         print("📭 Không có văn bản mới để index.")
         return
 
-    num_docs = storage.count_documents()
+    num_docs = storage_pg.count_documents()
     print(f"📄 Tổng văn bản: {num_docs}")
 
     index_data = defaultdict(list)  # term -> [(doc_id, freq), ...]
@@ -41,7 +41,7 @@ def index_documents():
 
     # 3. Lấy DF hiện có của term trong DB bằng batch query
     terms = list(batch_df.keys())
-    df_existing = storage.get_df_batch(terms)  # bạn cần implement hàm này trong storage
+    df_existing = storage_pg.get_df_batch(terms)  # bạn cần implement hàm này trong storage
 
     # 4. Tổng DF = DF cũ + DF batch
     df_total = {term: df_existing.get(term, 0) + batch_df[term] for term in batch_df.keys()}
@@ -53,11 +53,11 @@ def index_documents():
             upsert_records.append((term, doc_id, freq))
 
     # 6. Thực hiện batch upsert
-    storage.upsert_index_batch(upsert_records)  # bạn cần implement hàm này trong storage
+    storage_pg.upsert_index_batch(upsert_records)  # bạn cần implement hàm này trong storage
 
     # 7. Cập nhật df cho từng term (vẫn chạy từng term, có thể batch update nếu muốn)
     for term, df in df_total.items():
-        storage.update_df(term)
+        storage_pg.update_df(term)
 
     # 8. Tính TF-IDF vector và length cho từng document, update length
     for doc_id, bow in doc_bows.items():
@@ -67,7 +67,7 @@ def index_documents():
             idf = helper.idf(df_total.get(term, 1), num_docs)
             vector.append(tf * idf)
         length = math.sqrt(sum(w ** 2 for w in vector))
-        storage.update_doc_length(doc_id, length)
+        storage_pg.update_doc_length(doc_id, length)
         print(f"🔍 Đã index: {docs_info[doc_id]} (id={doc_id}, length={length:.2f})")
 
     print("✅ Indexing hoàn tất.")

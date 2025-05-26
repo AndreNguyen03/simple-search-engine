@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+
+  crawler_indexer:
+    build:
+      context: ./backend/crawler_indexer
+      dockerfile: Dockerfile
+    container_name: crawler_indexer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    volumes:
+      - ./backend/crawler_indexer:/app
+
+  search_api:
+    build:
+      context: ./backend/search_api
+      dockerfile: Dockerfile
+    container_name: search_api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    networks:
+      - backend
+    volumes:
+      - ./backend/search_api:/app
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:4173" # Vite preview default: 4173
+    networks:
+      - backend
+    restart: unless-stopped
+    depends_on:
+      - search_api
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
+    driver: bridge

@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, Tuple
 
 def extract_text_from_url(url: str, session: requests.Session) -> Optional[Tuple[str, str]]:
+    print(f"[Helper] 🕵️ Đang crawl nội dung từ: {url}")
     try:
         res = session.get(url, timeout=5)
         if res.status_code != 200:

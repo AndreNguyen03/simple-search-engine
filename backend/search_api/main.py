@@ -1,14 +1,13 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
-from search_api import search
+import search
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 origins = [
-    "http://localhost:8080",  # React app
-    # Thêm origin khác nếu cần
+    "*" # Cho phép tất cả các nguồn gốc (origins) truy cập vào API
 ]
 
 app.add_middleware(

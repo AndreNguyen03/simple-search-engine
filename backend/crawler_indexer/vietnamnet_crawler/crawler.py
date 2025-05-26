@@ -1,6 +1,6 @@
-from crawler_indexer.vietnamnet_crawler import helper as vn_helper
-from storage import insert_document, get_conn
-from crawler_indexer import common
+from . import craw_helper
+from storage_pg import insert_document, get_conn
+import common
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
@@ -24,7 +24,7 @@ def crawl_and_insert():
 
 def process_url(index: int, url: str, session: requests.Session):
     print(f"[Crawler] 🚀 {index}. Đang crawl: {url}")
-    title, description = vn_helper.extract_text_from_url(url, session)
+    title, description = craw_helper.extract_text_from_url(url, session)
     if (description and title):
         insert_document(url, description, title)
         print(f"[Crawler] ✅ Đã lưu URL: {url}")
@@ -34,7 +34,8 @@ def process_url(index: int, url: str, session: requests.Session):
 def is_url_visited(url: str) -> bool:
     conn = get_conn()
     cursor = conn.cursor()
-    cursor.execute('SELECT 1 FROM documents WHERE url = ?', (url,))
+    cursor.execute('SELECT 1 FROM documents WHERE url = %s', (url,))
     result = cursor.fetchone() is not None
     conn.close()
     return result
+

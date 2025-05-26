@@ -1,0 +1,7 @@
+requests
+beautifulsoup4
+lxml
+underthesea
+fastapi
+uvicorn
+psycopg2-binary
