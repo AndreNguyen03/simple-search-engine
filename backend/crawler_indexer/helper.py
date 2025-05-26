@@ -1,8 +1,6 @@
-from collections import defaultdict
 import math
 import unicodedata
 import re
-from collections import Counter
 import underthesea
 underthesea.word_tokenize("khởi động model")
 

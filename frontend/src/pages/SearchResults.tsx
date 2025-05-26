@@ -69,6 +69,7 @@ const SearchResults = () => {
             <div className="relative flex items-center max-w-2xl ml-0">
               <form
                 onSubmit={handleSearch}
+                data-testid="search-form"
                 className="relative flex items-center max-w-2xl ml-0 w-full"
               >
                 <input

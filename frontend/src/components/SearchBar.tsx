@@ -18,7 +18,7 @@ const SearchBar = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
-      <form onSubmit={handleSearch}>
+      <form onSubmit={handleSearch} data-testid="search-form">
         <div className="relative flex items-center w-full">
           <div className="absolute left-4 text-gray-500">
             <Search size={18} />

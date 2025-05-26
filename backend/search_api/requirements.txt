@@ -5,3 +5,5 @@ underthesea
 fastapi
 uvicorn
 psycopg2-binary
+pytest 
+httpx

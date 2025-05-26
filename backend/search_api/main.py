@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import search
@@ -23,7 +23,21 @@ class SearchRequest(BaseModel):
     page: Optional[int] = 1
     limit: Optional[int] = 20
 
+@app.get("/")
+async def root():
+    return {"message": "Search API is running"}
+
 @app.post("/search")
 def search_api(req: SearchRequest):
-    results, total, elapsed = search.search(req.query, top_k=req.limit, page=req.page)
-    return {"query": req.query, "results": results, "page": req.page, "limit": req.limit, "total": total, "time" : round(elapsed, 3)}
+    try:
+        results, total, elapsed = search.search(req.query, top_k=req.limit, page=req.page)
+        return {
+            "query": req.query,
+            "results": results,
+            "total": total,
+            "page": req.page,
+            "limit": req.limit,
+            "time": elapsed,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
