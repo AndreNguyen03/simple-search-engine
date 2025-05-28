@@ -34,12 +34,8 @@ pipeline {
 
                 waitForQualityGate abortPipeline: true
 
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    dir('backend/crawler_indexer') {
-                        dependencyCheck additionalArguments: "-o './' -s './' -f 'ALL' --prettyPrint --nvdApiKey=${env.NVD_API_KEY}", odcInstallation: 'DP-Check'
-                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                    }
-                }
+                // 👉 Thay thế DP-Check bằng Trivy
+                sh 'docker run --rm -v "$(pwd)/backend/crawler_indexer:/app" aquasec/trivy fs /app'
 
                 script {
                     def imageTag = "andrenguyen03/crawler-indexer:${env.BUILD_NUMBER}"
@@ -73,12 +69,7 @@ pipeline {
 
                 waitForQualityGate abortPipeline: true
 
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    dir('backend/search_api') {
-                        dependencyCheck additionalArguments: "--scan ./ --nvdApiKey=${env.NVD_API_KEY}", odcInstallation: 'DP-Check'
-                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                    }
-                }
+                sh 'docker run --rm -v "$(pwd)/backend/search_api:/app" aquasec/trivy fs /app'
 
                 script {
                     def imageTag = "andrenguyen03/search-api:${env.BUILD_NUMBER}"
@@ -112,12 +103,7 @@ pipeline {
 
                 waitForQualityGate abortPipeline: true
 
-                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    dir('frontend') {
-                        dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey=${env.NVD_API_KEY}", odcInstallation: 'DP-Check'
-                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                    }
-                }
+                sh 'docker run --rm -v "$(pwd)/frontend:/app" aquasec/trivy fs /app'
 
                 script {
                     def imageTag = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
