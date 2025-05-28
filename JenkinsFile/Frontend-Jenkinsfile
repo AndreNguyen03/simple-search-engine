@@ -5,6 +5,7 @@ pipeline {
     }
     tools {
         jdk 'jdk17'
+        nodejs 'node24'
     }
     stages {
         stage('Checkout') {
@@ -14,7 +15,6 @@ pipeline {
         }
 
         stage('Install dependencies') {
-            agent { docker { image 'node:24' } }
             steps {
                 dir('frontend') {
                     sh 'npm install'
@@ -23,7 +23,6 @@ pipeline {
         }
 
         stage('Run Tests') {
-            agent { docker { image 'node:24' } }
             steps {
                 dir('frontend') {
                     sh 'npm test'
