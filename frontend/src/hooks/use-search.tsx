@@ -1,5 +1,5 @@
 import { useState } from 'react';
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = '/api';
 
 export function useSearch() {
   const [results, setResults] = useState([]);

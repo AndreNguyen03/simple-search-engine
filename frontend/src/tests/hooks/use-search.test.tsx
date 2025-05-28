@@ -30,7 +30,7 @@ describe('useSearch', () => {
       await result.current.search('test', 1);
     });
 
-    expect(globalThis.fetch).toHaveBeenCalledWith('http://localhost:8000/search', {
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: 'test', page: 1, limit: 10 }),
