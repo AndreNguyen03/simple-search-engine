@@ -1,11 +1,10 @@
 pipeline {
     agent any
-    tools {
-        jdk 'jdk17'
-        nodejs 'node24'
-    }
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
+    }
+    tools {
+        jdk 'jdk17'
     }
     stages {
         stage('Checkout') {
@@ -13,25 +12,30 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
+
         stage('Install dependencies') {
+            agent { docker { image 'node:24' } }
             steps {
                 dir('frontend') {
                     sh 'npm install'
                 }
             }
         }
-        stage('Run tests') {
+
+        stage('Run Tests') {
+            agent { docker { image 'node:24' } }
             steps {
                 dir('frontend') {
                     sh 'npm test'
                 }
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-server') {
                     sh """
-                        $SCANNER_HOME/bin/sonar-scanner \
+                        ${SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=frontend \
                         -Dsonar.projectName=frontend \
                         -Dsonar.sources=frontend
@@ -39,59 +43,33 @@ pipeline {
                 }
             }
         }
+
         stage('Quality Gate') {
             steps {
                 waitForQualityGate abortPipeline: true
             }
         }
-        stage('OWASP Dependency Check') {
+
+        stage('Security Scan (Trivy)') {
             steps {
-                dir('frontend') {
-                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                }
+                sh 'docker run --rm -v "$(pwd)/frontend:/app" aquasec/trivy fs /app'
             }
         }
-        stage('Trivy FS Scan') {
-            steps {
-                sh 'trivy fs frontend > trivy-frontend-fs.json'
-            }
-        }
-        stage('Docker Build & Push') {
+
+        stage('Build Docker Image') {
             steps {
                 script {
-                    def imageTag = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh "docker build -t ${imageTag} frontend/"
-                        sh "docker push ${imageTag}"
-                    }
-                    env.IMAGE_TAG = imageTag
+                    env.FRONTEND_IMAGE = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
+                    sh "docker build -t ${env.FRONTEND_IMAGE} frontend/"
                 }
             }
         }
-        stage('Trivy Image Scan') {
+
+        stage('Push Docker Image') {
             steps {
-                sh "trivy image ${env.IMAGE_TAG} > trivy-frontend-image.json"
-            }
-        }
-        /*
-        stage('Deploy to EKS') {
-            steps {
-                withKubeConfig(credentialsId: 'eks-kubeconfig') {
-                    sh """
-                      helm upgrade --install frontend ./helm/frontend \
-                        --set image.tag=${env.BUILD_NUMBER} \
-                        --namespace your-namespace
-                    """
+                withDockerRegistry(credentialsId: 'dockerhub', url: '', toolName: 'docker') {
+                    sh "docker push ${env.FRONTEND_IMAGE}"
                 }
-            }
-        }
-        */
-    }
-    post {
-        success {
-            script {
-                writeFile file: 'frontend_tag.txt', text: env.IMAGE_TAG
             }
         }
     }
