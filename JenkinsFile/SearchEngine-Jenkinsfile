@@ -1,86 +1,121 @@
-pipeline{
+pipeline {
     agent any
-    tools{
-        jdk 'jdk17'
-        nodejs 'node19'
-    }
     environment {
-        SCANNER_HOME=tool 'sonar-scanner'
+        SCANNER_HOME = tool 'sonar-scanner'
     }
     stages {
-        stage('Checkout from Git'){
-            steps{
-                git branch: 'main', url: 'https://github.com/uniquesreedhar/Chatbot-UI.git'
-            }
-        }
-        stage('Install Dependencies') {
+        stage('Checkout') {
             steps {
-                sh "npm install"
+                git branch: 'main', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
-        stage("Sonarqube Analysis "){
-            steps{
+
+        stage('Build & Test backend/crawler_indexer') {
+            when {
+                changeset "**/backend/crawler_indexer/**"
+            }
+            agent {
+                docker { image 'python:3.9' }
+            }
+            steps {
+                dir('backend/crawler_indexer') {
+                    sh 'pip install -r requirements.txt'
+                    sh 'python -m unittest discover -s . -p "test_*.py" -v'
+                }
                 withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Chatbot \
-                    -Dsonar.projectKey=Chatbot '''
+                    sh """
+                        $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=crawler-indexer \
+                        -Dsonar.projectName=crawler-indexer \
+                        -Dsonar.sources=backend/crawler_indexer
+                    """
                 }
-            }
-        }
-        stage("quality gate"){
-           steps {
+                waitForQualityGate abortPipeline: true
+                dir('backend/crawler_indexer') {
+                    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
-                }
-            } 
-        }
-        stage('OWASP FS SCAN') {
-            steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
-        }
-        stage('TRIVY FS SCAN') {
-            steps {
-                sh "trivy fs . > trivyfs.json"
-            }
-        }
-        stage("Docker Build & Push"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker build -t chatbot ."
-                       sh "docker tag chatbot sreedhar8897/chatbot:latest "
-                       sh "docker push sreedhar8897/chatbot:latest "
+                    def imageTag = "andrenguyen03/crawler-indexer:${env.BUILD_NUMBER}"
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh "docker build -t ${imageTag} backend/crawler_indexer/"
+                        sh "docker push ${imageTag}"
                     }
+                    env.CRAWLER_INDEXER_IMAGE = imageTag
                 }
             }
         }
-        stage("TRIVY"){
-            steps{
-                sh "trivy image sreedhar8897/chatbot:latest > trivy.json" 
+
+        stage('Build & Test backend/search_api') {
+            when {
+                changeset "**/backend/search_api/**"
             }
-        }
-        stage ("Remove container") {
-            steps{
-                sh "docker stop chatbot | true"
-                sh "docker rm chatbot | true"
-             }
-        }
-        stage('Deploy to container'){
-            steps{
-                sh 'docker run -d --name chatbot -p 3000:3000 sreedhar8897/chatbot:latest'
+            agent {
+                docker { image 'python:3.9' }
             }
-        }
-        stage('Deploy to kubernetes'){
-            steps{
-                withAWS(credentials: 'aws-key', region: 'us-east-1'){
-                script{
-                    withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                       sh 'kubectl apply -f k8s/chatbot-ui.yaml'
-                  }
+            steps {
+                dir('backend/search_api') {
+                    sh 'pip install -r requirements.txt'
+                    sh 'python -m unittest discover -s . -p "test_*.py" -v'
+                }
+                withSonarQubeEnv('sonar-server') {
+                    sh """
+                        $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=search-api \
+                        -Dsonar.projectName=search-api \
+                        -Dsonar.sources=backend/search_api
+                    """
+                }
+                waitForQualityGate abortPipeline: true
+                dir('backend/search_api') {
+                    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+                script {
+                    def imageTag = "andrenguyen03/search-api:${env.BUILD_NUMBER}"
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh "docker build -t ${imageTag} backend/search_api/"
+                        sh "docker push ${imageTag}"
+                    }
+                    env.SEARCH_API_IMAGE = imageTag
                 }
             }
         }
+
+        stage('Build & Test frontend') {
+            when {
+                changeset "**/frontend/**"
+            }
+            agent {
+                docker { image 'node:24' }
+            }
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npm test'
+                }
+                withSonarQubeEnv('sonar-server') {
+                    sh """
+                        $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=frontend \
+                        -Dsonar.projectName=frontend \
+                        -Dsonar.sources=frontend
+                    """
+                }
+                waitForQualityGate abortPipeline: true
+                dir('frontend') {
+                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+                script {
+                    def imageTag = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh "docker build -t ${imageTag} frontend/"
+                        sh "docker push ${imageTag}"
+                    }
+                    env.FRONTEND_IMAGE = imageTag
+                }
+            }
         }
     }
-    }
+}
