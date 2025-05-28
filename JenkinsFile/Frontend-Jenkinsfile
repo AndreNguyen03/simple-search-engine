@@ -39,7 +39,7 @@ pipeline {
                         -Dsonar.projectName=frontend \\
                         -Dsonar.projectVersion=1.0 \\
                         -Dsonar.sources=frontend/src \\
-                        -Dsonar.exclusions=**/node_modules/**,**/*.test.js,**/*.test.ts,**/*.spec.js,**/*.spec.ts \\
+                        -Dsonar.exclusions=frontend/dist/**,**/node_modules/**,**/*.test.js,**/*.test.ts,**/*.spec.js,**/*.spec.ts \\
                         -Dsonar.test.inclusions=**/*.test.js,**/*.test.ts,**/*.spec.js,**/*.spec.ts \\
                         -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
                     """
