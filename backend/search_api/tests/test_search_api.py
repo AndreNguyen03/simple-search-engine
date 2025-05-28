@@ -28,7 +28,7 @@ class TestSearchAPI(unittest.TestCase):
 
         # Gửi yêu cầu POST tới endpoint /search
         request = SearchRequest(query="test query", page=1, limit=20)
-        response = self.client.post("/search", json=request.model_dump())
+        response = self.client.post("/api/search", json=request.model_dump())
 
         # Kiểm tra status code và nội dung trả về
         self.assertEqual(response.status_code, 200)
@@ -47,7 +47,7 @@ class TestSearchAPI(unittest.TestCase):
 
         # Gửi yêu cầu với truy vấn rỗng
         request = SearchRequest(query="", page=1, limit=20)
-        response = self.client.post("/search", json=request.model_dump())
+        response = self.client.post("/api/search", json=request.model_dump())
 
         # Kiểm tra kết quả
         self.assertEqual(response.status_code, 200)
@@ -77,7 +77,7 @@ class TestSearchAPI(unittest.TestCase):
 
         # Gửi yêu cầu với page=2, limit=5
         request = SearchRequest(query="test query", page=2, limit=5)
-        response = self.client.post("/search", json=request.model_dump())
+        response = self.client.post("/api/search", json=request.model_dump())
 
         # Kiểm tra kết quả
         self.assertEqual(response.status_code, 200)
@@ -96,7 +96,7 @@ class TestSearchAPI(unittest.TestCase):
 
         # Gửi yêu cầu
         request = SearchRequest(query="test query", page=1, limit=20)
-        response = self.client.post("/search", json=request.model_dump())
+        response = self.client.post("/api/search", json=request.model_dump())
 
         # Kiểm tra status code và lỗi
         self.assertEqual(response.status_code, 500)
