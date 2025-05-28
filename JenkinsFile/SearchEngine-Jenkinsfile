@@ -2,7 +2,6 @@ pipeline {
     agent any
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
-        NVD_API_KEY = credentials('nvd-api-key') // Lấy từ Jenkins Credentials
     }
     tools {
         jdk 'jdk17'
@@ -23,6 +22,7 @@ pipeline {
                     sh 'pip install -r requirements.txt'
                     sh 'python -m unittest discover -s . -p "test_*.py" -v'
                 }
+
                 withSonarQubeEnv('sonar-server') {
                     sh """
                         ${SCANNER_HOME}/bin/sonar-scanner \
@@ -31,12 +31,16 @@ pipeline {
                         -Dsonar.sources=backend/crawler_indexer
                     """
                 }
+
                 waitForQualityGate abortPipeline: true
 
-                dir('backend/crawler_indexer') {
-                    dependencyCheck additionalArguments: "--scan ./ --nvdApiKey=${NVD_API_KEY}", odcInstallation: 'DP-Check'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    dir('backend/crawler_indexer') {
+                        dependencyCheck additionalArguments: "-o './' -s './' -f 'ALL' --prettyPrint --nvdApiKey=${env.NVD_API_KEY}", odcInstallation: 'DP-Check'
+                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                    }
                 }
+
                 script {
                     def imageTag = "andrenguyen03/crawler-indexer:${env.BUILD_NUMBER}"
                     withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
@@ -57,6 +61,7 @@ pipeline {
                     sh 'pip install -r requirements.txt'
                     sh 'python -m unittest discover -s . -p "test_*.py" -v'
                 }
+
                 withSonarQubeEnv('sonar-server') {
                     sh """
                         ${SCANNER_HOME}/bin/sonar-scanner \
@@ -65,12 +70,16 @@ pipeline {
                         -Dsonar.sources=backend/search_api
                     """
                 }
+
                 waitForQualityGate abortPipeline: true
 
-                dir('backend/search_api') {
-                    dependencyCheck additionalArguments: "--scan ./ --nvdApiKey=${NVD_API_KEY}", odcInstallation: 'DP-Check'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    dir('backend/search_api') {
+                        dependencyCheck additionalArguments: "--scan ./ --nvdApiKey=${env.NVD_API_KEY}", odcInstallation: 'DP-Check'
+                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                    }
                 }
+
                 script {
                     def imageTag = "andrenguyen03/search-api:${env.BUILD_NUMBER}"
                     withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
@@ -91,6 +100,7 @@ pipeline {
                     sh 'npm install'
                     sh 'npm test'
                 }
+
                 withSonarQubeEnv('sonar-server') {
                     sh """
                         ${SCANNER_HOME}/bin/sonar-scanner \
@@ -99,12 +109,16 @@ pipeline {
                         -Dsonar.sources=frontend
                     """
                 }
+
                 waitForQualityGate abortPipeline: true
 
-                dir('frontend') {
-                    dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey=${NVD_API_KEY}", odcInstallation: 'DP-Check'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    dir('frontend') {
+                        dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey=${env.NVD_API_KEY}", odcInstallation: 'DP-Check'
+                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                    }
                 }
+
                 script {
                     def imageTag = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
                     withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
