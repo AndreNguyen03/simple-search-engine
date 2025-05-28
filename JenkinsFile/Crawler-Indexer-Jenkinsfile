@@ -1,0 +1,91 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        python 'python39'
+    }
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+            }
+        }
+        stage('Install dependencies') {
+            steps {
+                dir('backend/crawler_indexer') {
+                    sh 'pip install -r requirements.txt'
+                }
+            }
+        }
+        stage('Run tests') {
+            steps {
+                dir('backend/crawler_indexer') {
+                    sh 'python -m unittest discover -s . -p "test_*.py" -v'
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh """
+                        $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=crawler-indexer \
+                        -Dsonar.projectName=crawler-indexer \
+                        -Dsonar.sources=backend/crawler_indexer
+                    """
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+        }
+        stage('OWASP Dependency Check') {
+            steps {
+                dir('backend/crawler_indexer') {
+                    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+            }
+        }
+        stage('Trivy FS Scan') {
+            steps {
+                sh 'trivy fs backend/crawler_indexer > trivy-crawler-indexer-fs.json'
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    def imageTag = "andrenguyen03/crawler-indexer:${env.BUILD_NUMBER}"
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh "docker build -t ${imageTag} backend/crawler_indexer/"
+                        sh "docker push ${imageTag}"
+                    }
+                    env.IMAGE_TAG = imageTag
+                }
+            }
+        }
+        stage('Trivy Image Scan') {
+            steps {
+                sh "trivy image ${env.IMAGE_TAG} > trivy-crawler-indexer-image.json"
+            }
+        }
+        /*
+        stage('Deploy to EKS') {
+            steps {
+                withKubeConfig(credentialsId: 'eks-kubeconfig') {
+                    sh """
+                      helm upgrade --install crawler-indexer ./helm/crawler-indexer \
+                        --set image.tag=${env.BUILD_NUMBER} \
+                        --namespace your-namespace
+                    """
+                }
+            }
+        }
+        */
+    }
+}

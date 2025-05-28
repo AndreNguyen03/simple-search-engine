@@ -1,4 +1,5 @@
 import { useState } from 'react';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export function useSearch() {
   const [results, setResults] = useState([]);
@@ -14,7 +15,7 @@ export function useSearch() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8000/search', {
+      const response = await fetch(`${API_URL}/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

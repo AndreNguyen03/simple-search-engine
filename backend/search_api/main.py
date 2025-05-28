@@ -27,7 +27,7 @@ class SearchRequest(BaseModel):
 async def root():
     return {"message": "Search API is running"}
 
-@app.post("/search")
+@app.post("/api/search")
 def search_api(req: SearchRequest):
     try:
         results, total, elapsed = search.search(req.query, top_k=req.limit, page=req.page)

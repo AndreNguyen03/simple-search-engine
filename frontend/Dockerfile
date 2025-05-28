@@ -1,23 +1,27 @@
-# Base image
-FROM node:20-alpine
+# Stage 1: Build app
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy dependency configs
+# Copy only dependency files first to leverage Docker cache
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy source
+# Copy the rest of the app
 COPY . .
 
-# Build production app
+# Build the app
 RUN npm run build
 
-# Expose port used by Vite preview
-EXPOSE 4173
 
-# Start using vite preview
-CMD ["npm", "run", "preview"]
+# Stage 2: Run production server
+FROM nginx:alpine
+
+# Copy built app from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port (nginx serves on 80)
+EXPOSE 80
+
+# Optionally override default nginx config
+# COPY nginx.conf /etc/nginx/conf.d/default.conf

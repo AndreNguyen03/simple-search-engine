@@ -1,4 +1,5 @@
 import storage_pg
+
 from vietnamnet_crawler import crawler as vietnamnet_crawler
 from indexer import indexer
 

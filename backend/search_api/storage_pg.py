@@ -2,6 +2,7 @@ import psycopg2
 import config
 
 def get_conn():
+    print(f"[Storage] Connecting to PostgreSQL at {config.PG_HOST}:{config.PG_PORT} with user {config.PG_USER} {config.PG_PASSWORD}")
     return psycopg2.connect(
         dbname=config.PG_DB,
         user=config.PG_USER,
@@ -151,3 +152,18 @@ def get_df_batch(terms: list[str]) -> dict[str, int]:
             c.execute(query, terms)
             rows = c.fetchall()
     return {term: df for term, df in rows}
+
+def get_doc_lengths(doc_ids: list[int]) -> dict[int, float]:
+    if not doc_ids:
+        return {}
+
+    placeholders = ','.join(['%s'] * len(doc_ids))
+    query = f'''
+        SELECT id, length FROM documents
+        WHERE id IN ({placeholders})
+    '''
+    with get_conn() as conn:
+        with conn.cursor() as c:
+            c.execute(query, doc_ids)
+            rows = c.fetchall()
+    return {doc_id: length for doc_id, length in rows}
