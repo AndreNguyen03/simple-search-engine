@@ -2,7 +2,6 @@ pipeline {
     agent any
     stages {
         stage('Trigger jobs in parallel') {
-            parallel {
                 stage('Trigger crawler_indexer') {
                     steps {
                         build job: 'Crawler-Indexer-CI', wait: true, propagate: true
@@ -17,7 +16,6 @@ pipeline {
                     steps {
                         build job: 'Frontend-CI', wait: true, propagate: true
                     }
-                }
             }
         }
     }
