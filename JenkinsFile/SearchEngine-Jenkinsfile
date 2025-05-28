@@ -1,21 +1,23 @@
 pipeline {
     agent any
     stages {
-        stage('Trigger crawler_indexer') {
-            steps {
-                build job: 'Crawler-Indexer-CI', wait: true, propagate: true
-            }
-        }
-
-        stage('Trigger search_api') {
-            steps {
-                build job: 'Search-API-CI', wait: true, propagate: true
-            }
-        }
-
-        stage('Trigger frontend') {
-            steps {
-                build job: 'Frontend-CI', wait: true, propagate: true
+        stage('Trigger jobs in parallel') {
+            parallel {
+                stage('Trigger crawler_indexer') {
+                    steps {
+                        build job: 'Crawler-Indexer-CI', wait: true, propagate: true
+                    }
+                }
+                stage('Trigger search_api') {
+                    steps {
+                        build job: 'Search-API-CI', wait: true, propagate: true
+                    }
+                }
+                stage('Trigger frontend') {
+                    steps {
+                        build job: 'Frontend-CI', wait: true, propagate: true
+                    }
+                }
             }
         }
     }
