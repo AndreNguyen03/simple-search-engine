@@ -11,9 +11,6 @@ pipeline {
         }
 
         stage('Build & Test backend/crawler_indexer') {
-            when {
-                changeset "**/backend/crawler_indexer/**"
-            }
             agent {
                 docker { image 'python:3.9' }
             }
@@ -47,9 +44,6 @@ pipeline {
         }
 
         stage('Build & Test backend/search_api') {
-            when {
-                changeset "**/backend/search_api/**"
-            }
             agent {
                 docker { image 'python:3.9' }
             }
@@ -83,9 +77,6 @@ pipeline {
         }
 
         stage('Build & Test frontend') {
-            when {
-                changeset "**/frontend/**"
-            }
             agent {
                 docker { image 'node:24' }
             }
