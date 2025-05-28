@@ -34,7 +34,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar-server') {
                     sh """
-                        NODE_OPTIONS="--max-old-space-size=512" ${SCANNER_HOME}/bin/sonar-scanner \\
+                        NODE_OPTIONS="--max-old-space-size=768" ${SCANNER_HOME}/bin/sonar-scanner \\
                         -Dsonar.projectKey=frontend \\
                         -Dsonar.projectName=frontend \\
                         -Dsonar.projectVersion=1.0 \\
