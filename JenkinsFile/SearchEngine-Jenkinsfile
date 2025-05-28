@@ -3,9 +3,6 @@ pipeline {
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
     }
-    tools {
-        jdk 'jdk17'
-    }
     stages {
         stage('Checkout') {
             steps {
@@ -24,20 +21,21 @@ pipeline {
                 }
                 withSonarQubeEnv('sonar-server') {
                     sh """
-                        $SCANNER_HOME/bin/sonar-scanner \
+                        ${SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=crawler-indexer \
                         -Dsonar.projectName=crawler-indexer \
                         -Dsonar.sources=backend/crawler_indexer
                     """
                 }
                 waitForQualityGate abortPipeline: true
+
                 dir('backend/crawler_indexer') {
                     dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
                 script {
                     def imageTag = "andrenguyen03/crawler-indexer:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
                         sh "docker build -t ${imageTag} backend/crawler_indexer/"
                         sh "docker push ${imageTag}"
                     }
@@ -57,20 +55,21 @@ pipeline {
                 }
                 withSonarQubeEnv('sonar-server') {
                     sh """
-                        $SCANNER_HOME/bin/sonar-scanner \
+                        ${SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=search-api \
                         -Dsonar.projectName=search-api \
                         -Dsonar.sources=backend/search_api
                     """
                 }
                 waitForQualityGate abortPipeline: true
+
                 dir('backend/search_api') {
                     dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
                 script {
                     def imageTag = "andrenguyen03/search-api:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
                         sh "docker build -t ${imageTag} backend/search_api/"
                         sh "docker push ${imageTag}"
                     }
@@ -90,20 +89,21 @@ pipeline {
                 }
                 withSonarQubeEnv('sonar-server') {
                     sh """
-                        $SCANNER_HOME/bin/sonar-scanner \
+                        ${SCANNER_HOME}/bin/sonar-scanner \
                         -Dsonar.projectKey=frontend \
                         -Dsonar.projectName=frontend \
                         -Dsonar.sources=frontend
                     """
                 }
                 waitForQualityGate abortPipeline: true
+
                 dir('frontend') {
                     dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
                 script {
                     def imageTag = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
                         sh "docker build -t ${imageTag} frontend/"
                         sh "docker push ${imageTag}"
                     }
