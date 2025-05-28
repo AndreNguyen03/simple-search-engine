@@ -3,7 +3,7 @@ pipeline {
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
     }
-    tool {
+    tools {
         jdk 'jdk17'
     }
     stages {
