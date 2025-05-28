@@ -3,19 +3,19 @@ pipeline {
     stages {
         stage('Trigger crawler_indexer') {
             steps {
-                build job: 'crawler-indexer-pipeline', wait: true, propagate: true
+                build job: 'Crawler-Indexer-CI', wait: true, propagate: true
             }
         }
 
         stage('Trigger search_api') {
             steps {
-                build job: 'search-api-pipeline', wait: true, propagate: true
+                build job: 'Search API CI', wait: true, propagate: true
             }
         }
 
         stage('Trigger frontend') {
             steps {
-                build job: 'frontend-pipeline', wait: true, propagate: true
+                build job: 'Frontend CI', wait: true, propagate: true
             }
         }
     }
