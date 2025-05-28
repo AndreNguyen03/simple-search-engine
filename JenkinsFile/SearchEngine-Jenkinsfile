@@ -39,7 +39,7 @@ pipeline {
 
                 script {
                     def imageTag = "andrenguyen03/crawler-indexer:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'dockerhub', url: '', toolName: 'docker') {
                         sh "docker build -t ${imageTag} backend/crawler_indexer/"
                         sh "docker push ${imageTag}"
                     }
@@ -73,7 +73,7 @@ pipeline {
 
                 script {
                     def imageTag = "andrenguyen03/search-api:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'dockerhub', url: '', toolName: 'docker') {
                         sh "docker build -t ${imageTag} backend/search_api/"
                         sh "docker push ${imageTag}"
                     }
@@ -107,7 +107,7 @@ pipeline {
 
                 script {
                     def imageTag = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', url: '', registry: '', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'dockerhub', url: '', toolName: 'docker') {
                         sh "docker build -t ${imageTag} frontend/"
                         sh "docker push ${imageTag}"
                     }
