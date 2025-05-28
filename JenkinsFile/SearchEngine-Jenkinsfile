@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
+        NVD_API_KEY = credentials('nvd-api-key') // Lấy từ Jenkins Credentials
     }
     tools {
         jdk 'jdk17'
@@ -33,7 +34,7 @@ pipeline {
                 waitForQualityGate abortPipeline: true
 
                 dir('backend/crawler_indexer') {
-                    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
+                    dependencyCheck additionalArguments: "--scan ./ --nvdApiKey=${NVD_API_KEY}", odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
                 script {
@@ -67,7 +68,7 @@ pipeline {
                 waitForQualityGate abortPipeline: true
 
                 dir('backend/search_api') {
-                    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
+                    dependencyCheck additionalArguments: "--scan ./ --nvdApiKey=${NVD_API_KEY}", odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
                 script {
@@ -101,7 +102,7 @@ pipeline {
                 waitForQualityGate abortPipeline: true
 
                 dir('frontend') {
-                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                    dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey=${NVD_API_KEY}", odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
                 script {
