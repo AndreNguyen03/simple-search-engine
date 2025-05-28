@@ -9,13 +9,13 @@ pipeline {
 
         stage('Trigger search_api') {
             steps {
-                build job: 'Search API CI', wait: true, propagate: true
+                build job: 'Search-API-CI', wait: true, propagate: true
             }
         }
 
         stage('Trigger frontend') {
             steps {
-                build job: 'Frontend CI', wait: true, propagate: true
+                build job: 'Frontend-CI', wait: true, propagate: true
             }
         }
     }
