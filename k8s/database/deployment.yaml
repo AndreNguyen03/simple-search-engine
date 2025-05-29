@@ -38,20 +38,20 @@ spec:
           - name: postgres-volume
             mountPath: /var/lib/postgresql/data
         readinessProbe:
-            tcpSocket:
-              port: 5432
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            failureThreshold: 3
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
         livenessProbe:
           exec:
             command:
               - pg_isready
               - -U
               - "$(POSTGRES_USER)"
-        initialDelaySeconds: 10
-        periodSeconds: 10
-        failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
       volumes: 
         - name: postgres-volume
           persistentVolumeClaim:
