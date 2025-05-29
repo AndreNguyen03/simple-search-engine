@@ -6,16 +6,13 @@ pipeline {
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
     }
-    tools {
-        jdk 'jdk17'
-    }
     stages {
         stage('Clean Workspace') {
             steps {
                 cleanWs()
             }
         }
-        stage('Checkout Code') {
+        stage('Checkout from Git') {
             steps {
                 git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
