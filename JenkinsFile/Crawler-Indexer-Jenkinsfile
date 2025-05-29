@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout from Git') {
             steps {
-                git branch: 'main',git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+                git branch: 'main',credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
         stage('Sonarqube Analysis') {
