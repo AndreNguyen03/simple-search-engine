@@ -1,6 +1,0 @@
-apiVersion: v2
-name: frontend
-description: A Helm chart for the frontend of the search engine
-type: application
-version: 1.0.0       # Version of this chart
-appVersion: "{{ .Values.frontend.tag }}"  # Version of your application (Docker image tag)

@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: crawler-indexer
+  namespace: search-engine
+  labels:
+    app: crawler-indexer
+    env: demo
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        metadata:
+          labels:
+            app: crawler-indexer
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: crawler-indexer
+            image: andrenguyen03/crawler-indexer:latest
+            env:
+              - name: PG_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-sec
+                    key: DB_HOST
+              - name: PG_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-sec
+                    key: DB_PORT
+              - name: PG_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-sec
+                    key: DB_USERNAME
+              - name: PG_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-sec
+                    key: DB_PASSWORD
+              - name: PG_DB
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-sec
+                    key: DB_NAME
+              
+            

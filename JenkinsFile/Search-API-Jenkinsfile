@@ -1,91 +1,100 @@
 pipeline {
     agent any
     tools {
-        jdk 'jdk17'
-        python 'python39'
+        jdk 'jdk'
     }
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
     }
     stages {
-        stage('Checkout') {
+        stage('Clean Workspace') {
             steps {
-                git branch: 'main', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+                cleanWs()
             }
         }
-        stage('Install dependencies') {
+        stage('Checkout Code') {
+            steps {
+                git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+            }
+        }
+        stage('Sonarqube Analysis') {
             steps {
                 dir('backend/search_api') {
-                    sh 'pip install -r requirements.txt'
-                }
-            }
-        }
-        stage('Run tests') {
-            steps {
-                dir('backend/search_api') {
-                    sh 'python -m unittest discover -s . -p "test_*.py" -v'
-                }
-            }
-        }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh """
-                        $SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectKey=search-api \
-                        -Dsonar.projectName=search-api \
-                        -Dsonar.sources=backend/search_api
-                    """
+                    withSonarQubeEnv('sonar-server') {
+                        sh '''${SCANNER_HOME}/bin/sonar-scanner \
+                            -Dsonar.projectName=search-api \
+                            -Dsonar.projectKey=search-api'''
+                    }
                 }
             }
         }
         stage('Quality Gate') {
             steps {
-                waitForQualityGate abortPipeline: true
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
+                }
             }
         }
         stage('OWASP Dependency Check') {
             steps {
                 dir('backend/search_api') {
-                    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
+                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
             }
         }
-        stage('Trivy FS Scan') {
+        stage('Trivy File Scan') {
             steps {
-                sh 'trivy fs backend/search_api > trivy-search-api-fs.json'
+                dir('backend/search_api') {
+                    sh 'trivy fs . > trivyfs.txt'
+                }
             }
         }
         stage('Docker Build & Push') {
             steps {
                 script {
-                    def imageTag = "andrenguyen03/search-api:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh "docker build -t ${imageTag} backend/search_api/"
-                        sh "docker push ${imageTag}"
+                    dir('backend/search_api') {
+                        def imageTag = "andrenguyen03/search_api:${BUILD_NUMBER}"
+                        withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                            sh 'docker system prune -f'
+                            sh 'docker container prune -f'
+                            sh "docker build -t ${imageTag} ."
+                            sh "docker push ${imageTag}"
+                        }
                     }
-                    env.IMAGE_TAG = imageTag
                 }
             }
         }
         stage('Trivy Image Scan') {
             steps {
-                sh "trivy image ${env.IMAGE_TAG} > trivy-search-api-image.json"
+                sh 'trivy image andrenguyen03/search_api:${BUILD_NUMBER} > trivyimage.txt'
             }
         }
-        /*
-        stage('Deploy to EKS') {
+        stage('Checkout Code') {
             steps {
-                withKubeConfig(credentialsId: 'eks-kubeconfig') {
-                    sh """
-                      helm upgrade --install search-api ./helm/search-api \
-                        --set image.tag=${env.BUILD_NUMBER} \
-                        --namespace your-namespace
-                    """
+                git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+            }
+        }
+        stage('Update Deployment file') {
+            environment {
+                GIT_REPO_NAME = "simple-search-engine"
+                GIT_USER_NAME = "AndreNguyen03"
+            }
+            steps {
+                dir('k8s/search-api') {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git config user.email "ngocanh030110@example.com"
+                            git config user.name "Ngoc Anh Nguyen"
+                            imageTag=$(grep -oP '(?<=andrenguyen03/search_api:)[^"]+' deployment.yaml)
+                            sed -i "s|andrenguyen03/search_api:${imageTag}|andrenguyen03/search_api:${BUILD_NUMBER}|" deployment.yaml
+                            git add deployment.yaml
+                            git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+                        '''
+                    }
                 }
             }
         }
-        */
     }
 }

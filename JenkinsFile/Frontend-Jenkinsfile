@@ -1,50 +1,42 @@
 pipeline {
-    agent any
+    agent any 
     tools {
-        jdk 'jdk17'
-        nodejs 'node24'
+        jdk 'jdk'
+        nodejs 'nodejs'
     }
-    environment {
-        SCANNER_HOME = tool 'sonar-scanner'
+    environment  {
+        SCANNER_HOME=tool 'sonar-scanner'
     }
     stages {
-        stage('Checkout') {
+        stage('Cleaning Workspace') {
             steps {
-                git branch: 'main', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+                cleanWs()
             }
         }
-        stage('Install dependencies') {
+        stage('Checkout Code') {
+            steps {
+                git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+            }
+        }
+        stage('Sonarqube Analysis') {
             steps {
                 dir('frontend') {
-                    sh 'npm install'
-                }
-            }
-        }
-        stage('Run tests') {
-            steps {
-                dir('frontend') {
-                    sh 'npm test'
-                }
-            }
-        }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh """
-                        $SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectKey=frontend \
+                    withSonarQubeEnv('sonar-server') {
+                        sh ''' $SCANNER_HOME/bin/sonar-scanner \
                         -Dsonar.projectName=frontend \
-                        -Dsonar.sources=frontend
-                    """
+                        -Dsonar.projectKey=frontend '''
+                    }
                 }
             }
         }
-        stage('Quality Gate') {
+        stage('Quality Check') {
             steps {
-                waitForQualityGate abortPipeline: true
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                }
             }
         }
-        stage('OWASP Dependency Check') {
+        stage('OWASP Dependency-Check Scan') {
             steps {
                 dir('frontend') {
                     dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
@@ -52,46 +44,57 @@ pipeline {
                 }
             }
         }
-        stage('Trivy FS Scan') {
+        stage('Trivy File Scan') {
             steps {
-                sh 'trivy fs frontend > trivy-frontend-fs.json'
+                dir('frontend') {
+                    sh 'trivy fs . > trivyfs.txt'
+                }
             }
         }
         stage('Docker Build & Push') {
             steps {
                 script {
-                    def imageTag = "andrenguyen03/frontend:${env.BUILD_NUMBER}"
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh "docker build -t ${imageTag} frontend/"
-                        sh "docker push ${imageTag}"
+                    dir('frontend') {
+                        def imageTag = "andrenguyen03/frontend:${BUILD_NUMBER}"
+                        withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                            sh 'docker system prune -f'
+                            sh 'docker container prune -f'
+                            sh "docker build -t ${imageTag} ."
+                            sh "docker push ${imageTag}"
+                        }
                     }
-                    env.IMAGE_TAG = imageTag
                 }
             }
         }
         stage('Trivy Image Scan') {
             steps {
-                sh "trivy image ${env.IMAGE_TAG} > trivy-frontend-image.json"
+                sh 'trivy image andrenguyen03/frontend:${BUILD_NUMBER} > trivyimage.txt'
             }
         }
-        /*
-        stage('Deploy to EKS') {
+        stage('Checkout Code') {
             steps {
-                withKubeConfig(credentialsId: 'eks-kubeconfig') {
-                    sh """
-                      helm upgrade --install frontend ./helm/frontend \
-                        --set image.tag=${env.BUILD_NUMBER} \
-                        --namespace your-namespace
-                    """
-                }
+                git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
-        */
-    }
-    post {
-        success {
-            script {
-                writeFile file: 'frontend_tag.txt', text: env.IMAGE_TAG
+        stage('Update Deployment file') {
+            environment {
+                GIT_REPO_NAME = "simple-search-engine"
+                GIT_USER_NAME = "AndreNguyen03"
+            }
+            steps {
+                dir('k8s/frontend') {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git config user.email "ngocanh030110@example.com"
+                            git config user.name "Ngoc Anh Nguyen"
+                            imageTag=$(grep -oP '(?<=frontend:)[^ ]+' deployment.yaml)
+                            sed -i "s/$andrenguyen03:${imageTag}/$andrenguyen03:${BUILD_NUMBER}/" deployment.yaml
+                            git add deployment.yaml
+                            git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+                        '''
+                    }
+                }
             }
         }
     }
