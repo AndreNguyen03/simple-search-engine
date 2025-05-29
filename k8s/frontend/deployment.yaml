@@ -22,28 +22,27 @@ spec:
         app: frontend
     spec: 
       containers:
-      - name: frontend
-        image: andrenguyen03/frontend:latest
-        ports:
-        - containerPort: 80
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 80
-          initialDelaySeconds: 2
-          periodSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          successThreshold: 1
-        startupProbe:
-          httpGet:
-            path: /started
-            port: 80
-          initialDelaySeconds: 0
-          periodSeconds: 10
-          failureThreshold: 30
-              
+        - name: frontend
+          image: andrenguyen03/frontend:latest
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+          startupProbe:
+            httpGet:
+              path: /started
+              port: 80
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 30

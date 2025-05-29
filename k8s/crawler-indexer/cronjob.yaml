@@ -18,33 +18,14 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-          - name: crawler-indexer
-            image: andrenguyen03/crawler-indexer:latest
-            env:
-              - name: PG_HOST
-                valueFrom:
-                  secretKeyRef:
-                    name: postgres-sec
-                    key: DB_HOST
-              - name: PG_PORT
-                valueFrom:
-                  secretKeyRef:
-                    name: postgres-sec
-                    key: DB_PORT
-              - name: PG_USER
-                valueFrom:
-                  secretKeyRef:
-                    name: postgres-sec
-                    key: DB_USERNAME
-              - name: PG_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: postgres-sec
-                    key: DB_PASSWORD
-              - name: PG_DB
-                valueFrom:
-                  secretKeyRef:
-                    name: postgres-sec
-                    key: DB_NAME
-              
-            
+            - name: crawler-indexer
+              image: andrenguyen03/crawler-indexer:latest
+              env:
+                - name: PG_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-sec
+                      key: DB_HOST
+                - name: PG_PORT
+                  valueFrom:
+                    secretKeyRef:

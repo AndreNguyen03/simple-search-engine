@@ -22,11 +22,11 @@ spec:
         app: search-api
     spec:
       containers:
-      - name: search-api
-        image: andrenguyen03/search-api:17
-        ports:
-        - containerPort: 8000
-        env:
+        - name: search-api
+          image: andrenguyen03/search-api:17
+          ports:
+            - containerPort: 8000
+          env:
             - name: PG_HOST
               valueFrom:
                 secretKeyRef:
@@ -52,24 +52,23 @@ spec:
                 secretKeyRef:
                   name: postgres-sec
                   key: DB_NAME
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8000
-          initialDelaySeconds: 2
-          periodSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          successThreshold: 1
-        startupProbe:
-          httpGet:
-            path: /started
-            port: 8000
-          initialDelaySeconds: 0
-          periodSeconds: 10
-          failureThreshold: 30
-              
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+          startupProbe:
+            httpGet:
+              path: /started
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 30
