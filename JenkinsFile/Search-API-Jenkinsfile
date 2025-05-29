@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     dir('backend/search_api') {
-                        def imageTag = "andrenguyen03/search_api:${BUILD_NUMBER}"
+                        def imageTag = "andrenguyen03/search-api:${BUILD_NUMBER}"
                         withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
                             sh 'docker system prune -f'
                             sh 'docker container prune -f'
