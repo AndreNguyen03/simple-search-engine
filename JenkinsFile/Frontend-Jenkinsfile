@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout from Git') {
             steps {
-                git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+                git branch: 'main',git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
         stage('Sonarqube Analysis') {
@@ -69,7 +69,7 @@ pipeline {
         }
         stage('Checkout Code') {
             steps {
-                git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+                git branch: 'main',git credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
         stage('Update Deployment file') {
