@@ -35,3 +35,6 @@ trivyimage.txt
 
 # Jenkins or build temp folder
 frontend@tmp/
+
+../frontend@tmp/
+../../trivyimage.txt
