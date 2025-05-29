@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-      http:
+    - http:  # ← thiếu dấu gạch đầu dòng này trong bản của bạn
         paths:
           - path: /api
             pathType: Prefix
