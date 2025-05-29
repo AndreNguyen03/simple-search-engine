@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     dir('backend/crawler_indexer') {
-                        def imageTag = "andrenguyen03/crawler_indexer:${BUILD_NUMBER}"
+                        def imageTag = "andrenguyen03/crawler-indexer:${BUILD_NUMBER}"
                         withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
                             sh 'docker system prune -f'
                             sh 'docker container prune -f'
