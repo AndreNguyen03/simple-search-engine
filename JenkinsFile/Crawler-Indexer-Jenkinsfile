@@ -35,7 +35,7 @@ pipeline {
         stage('Security Scan (Trivy)') {
             steps {
                 dir('backend/crawler_indexer') {
-                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey=b5aece65-76a0-4604-a3e6-b29a27ce13b0', odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
             }
