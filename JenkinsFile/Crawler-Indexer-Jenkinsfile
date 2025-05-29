@@ -65,7 +65,7 @@ pipeline {
         }
         stage('Trivy Image Scan') {
             steps {
-                sh 'trivy image andrenguyen03/crawler_indexer:${BUILD_NUMBER} > trivyimage.txt'
+                sh 'trivy image andrenguyen03/crawler-indexer:${BUILD_NUMBER} > trivyimage.txt'
             }
         }
         stage('Checkout Code') {
@@ -85,10 +85,10 @@ pipeline {
                             git config user.email "ngocanh030110@example.com"
                             git config user.name "Ngoc Anh Nguyen"
                             imageTag=$(grep -oP '(?<=crawler-indexer:)[^ ]+' cronjob.yaml)
-                            sed -i "s/$andrenguyen03:crawler-indexer:${imageTag}/$andrenguyen03:crawler-indexer:${BUILD_NUMBER}/" cronjob.yaml
+                            sed -i "s|$andrenguyen03/crawler-indexer:${imageTag}|$andrenguyen03/crawler-indexer:${BUILD_NUMBER}|" cronjob.yaml
                             git add cronjob.yaml
                             git commit -m "Update cronjob Image to version ${BUILD_NUMBER}"
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                         '''
                     }
                 }

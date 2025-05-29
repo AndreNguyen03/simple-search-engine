@@ -65,7 +65,7 @@ pipeline {
         }
         stage('Trivy Image Scan') {
             steps {
-                sh 'trivy image andrenguyen03/search_api:${BUILD_NUMBER} > trivyimage.txt'
+                sh 'trivy image andrenguyen03/search-api:${BUILD_NUMBER} > trivyimage.txt'
             }
         }
         stage('Checkout Code') {
@@ -85,10 +85,10 @@ pipeline {
                             git config user.email "ngocanh030110@example.com"
                             git config user.name "Ngoc Anh Nguyen"
                             imageTag=$(grep -oP '(?<=andrenguyen03/search-api:)[^"]+' deployment.yaml)
-                            sed -i "s/andrenguyen03/search-api:${imageTag}/andrenguyen03/search-api:${BUILD_NUMBER}/" deployment.yaml
+                            sed -i "s|andrenguyen03/search-api:${imageTag}|andrenguyen03/search-api:${BUILD_NUMBER}|" deployment.yaml
                             git add deployment.yaml
                             git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                         '''
                     }
                 }

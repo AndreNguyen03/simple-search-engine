@@ -28,20 +28,20 @@ spec:
             - containerPort: 80
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /
               port: 80
             initialDelaySeconds: 2
             periodSeconds: 5
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 5
             successThreshold: 1
           startupProbe:
             httpGet:
-              path: /started
+              path: /
               port: 80
             initialDelaySeconds: 0
             periodSeconds: 10
