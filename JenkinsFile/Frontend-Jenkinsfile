@@ -84,7 +84,7 @@ pipeline {
                             git config user.email "ngocanh030110@example.com"
                             git config user.name "Ngoc Anh Nguyen"
                             imageTag=$(grep -oP '(?<=frontend:)[^ ]+' deployment.yaml)
-                            sed -i "s/$andrenguyen03:${imageTag}/$andrenguyen03:${BUILD_NUMBER}/" deployment.yaml
+                            sed -i "s/$andrenguyen03:frontend:${imageTag}/$andrenguyen03:frontend:${BUILD_NUMBER}/" deployment.yaml
                             git add deployment.yaml
                             git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
                             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
