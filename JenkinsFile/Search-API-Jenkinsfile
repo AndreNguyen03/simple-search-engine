@@ -80,7 +80,7 @@ pipeline {
             }
             steps {
                 dir('k8s/search-api') {
-                    withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             git config user.email "ngocanh030110@example.com"
                             git config user.name "Ngoc Anh Nguyen"
