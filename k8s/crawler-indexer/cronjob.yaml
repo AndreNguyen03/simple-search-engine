@@ -19,7 +19,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: crawler-indexer
-            image: andrenguyen03/crawler-indexer:latest
+            image: andrenguyen03/crawler-indexer:5
             env:
               - name: PG_HOST
                 valueFrom:
