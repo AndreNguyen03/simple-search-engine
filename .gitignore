@@ -24,3 +24,6 @@ Thumbs.db
 trivy*.txt
 dependency-check-report.xml
 **/@tmp/
+frontend@tmp/
+crawler-indexer@tmp/
+search-api@tmp/
