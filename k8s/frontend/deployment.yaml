@@ -23,7 +23,7 @@ spec:
     spec: 
       containers:
         - name: frontend
-          image: andrenguyen03/frontend:10
+          image: andrenguyen03/frontend:3
           ports:
             - containerPort: 80
           livenessProbe:
