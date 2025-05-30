@@ -4,7 +4,7 @@ data "http" "alb_policy" {
 
 resource "aws_iam_policy" "alb_policy" {
   name   = "AWSLoadBalancerControllerIAMPolicy"
-  policy = data.http.alb_policy.body
+  policy = data.http.alb_policy.response_body
 }
 
 module "alb_irsa" {
