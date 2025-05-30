@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: search-api
-          image: andrenguyen03/search-api:3
+          image: andrenguyen03/search-api:1
           ports:
             - containerPort: 8000
           env:
