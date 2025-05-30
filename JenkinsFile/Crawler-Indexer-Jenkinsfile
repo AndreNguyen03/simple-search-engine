@@ -7,6 +7,45 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
     }
     stages {
+        stage('Init') {
+            steps {
+                script {
+                    // Kiểm tra nếu là build thủ công
+                    isManualBuild = currentBuild.getBuildCauses().any { it._class == 'hudson.model.Cause$UserIdCause' }
+
+                    echo "📦 Manual build: ${isManualBuild}"
+
+                    if (!isManualBuild) {
+                        // Kiểm tra thay đổi code nếu không phải build thủ công
+                        def changeLogSets = currentBuild.changeSets
+                        def changed = false
+
+                        for (int i = 0; i < changeLogSets.size(); i++) {
+                            def entries = changeLogSets[i].items
+                            for (int j = 0; j < entries.length; j++) {
+                                def entry = entries[j]
+                                def files = entry.affectedFiles
+                                for (int k = 0; k < files.size(); k++) {
+                                    def file = files[k]
+                                    if (file.path.startsWith("backend/crawler_indexer/")) {
+                                        changed = true
+                                        break
+                                    }
+                                }
+                                if (changed) break
+                            }
+                            if (changed) break
+                        }
+
+                        if (!changed) {
+                            echo "🛑 No changes in 'backend/crawler_indexer/' — stopping pipeline."
+                            currentBuild.result = 'NOT_BUILT'
+                            error("Nothing to do.")
+                        }
+                    }
+                }
+            }
+        }
         stage('Checkout from Git') {
             steps {
                 git branch: 'main',credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'

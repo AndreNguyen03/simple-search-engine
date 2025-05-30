@@ -5,14 +5,55 @@ pipeline {
         nodejs 'nodejs'
     }
     environment  {
-        SCANNER_HOME=tool 'sonar-scanner'
+        SCANNER_HOME = tool 'sonar-scanner'
     }
     stages {
-        stage('Checkout from Git') {
+        stage('Init') {
             steps {
-                git branch: 'main',credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+                script {
+                    // Kiểm tra nếu là build thủ công
+                    isManualBuild = currentBuild.getBuildCauses().any { it._class == 'hudson.model.Cause$UserIdCause' }
+
+                    echo "📦 Manual build: ${isManualBuild}"
+
+                    if (!isManualBuild) {
+                        // Kiểm tra thay đổi code nếu không phải build thủ công
+                        def changeLogSets = currentBuild.changeSets
+                        def changed = false
+
+                        for (int i = 0; i < changeLogSets.size(); i++) {
+                            def entries = changeLogSets[i].items
+                            for (int j = 0; j < entries.length; j++) {
+                                def entry = entries[j]
+                                def files = entry.affectedFiles
+                                for (int k = 0; k < files.size(); k++) {
+                                    def file = files[k]
+                                    if (file.path.startsWith("frontend/")) {
+                                        changed = true
+                                        break
+                                    }
+                                }
+                                if (changed) break
+                            }
+                            if (changed) break
+                        }
+
+                        if (!changed) {
+                            echo "🛑 No changes in 'frontend/' — stopping pipeline."
+                            currentBuild.result = 'NOT_BUILT'
+                            error("Nothing to do.")
+                        }
+                    }
+                }
             }
         }
+
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
+            }
+        }
+
         stage('Sonarqube Analysis') {
             steps {
                 dir('frontend') {
@@ -24,6 +65,7 @@ pipeline {
                 }
             }
         }
+
         stage('Quality Check') {
             steps {
                 script {
@@ -31,6 +73,7 @@ pipeline {
                 }
             }
         }
+
         stage('OWASP Dependency-Check Scan') {
             steps {
                 dir('frontend') {
@@ -39,6 +82,7 @@ pipeline {
                 }
             }
         }
+
         stage('Trivy File Scan') {
             steps {
                 dir('frontend') {
@@ -62,16 +106,19 @@ pipeline {
                 }
             }
         }
+
         stage('Trivy Image Scan') {
             steps {
                 sh 'trivy image andrenguyen03/frontend:${BUILD_NUMBER} > trivyimage.txt'
             }
         }
-        stage('Checkout Code') {
+
+        stage('Checkout Code Again') {
             steps {
                 git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
+
         stage('Update Deployment file') {
             environment {
                 GIT_REPO_NAME = "simple-search-engine"
