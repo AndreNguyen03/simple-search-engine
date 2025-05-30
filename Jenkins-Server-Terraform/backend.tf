@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "my-aws-bucket0301"
+    bucket         = "simple-search-engine-tfstate"
     region         = "ap-southeast-1"
     key            = "Search-Engine/Jenkins-Server-TF/terraform.tfstate"
     dynamodb_table = "Lock-Files"
