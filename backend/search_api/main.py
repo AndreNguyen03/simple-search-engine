@@ -32,7 +32,6 @@ def search_api(req: SearchRequest):
     try:
         results, total, elapsed = search.search(req.query, top_k=req.limit, page=req.page)
         print(f"Search query: {req.query}, Page: {req.page}, Limit: {req.limit}, Results: {len(results)}, Total: {total}, Time: {elapsed:.2f} seconds")
-        print(f"Search query: {req.query}, Page: {req.page}, Limit: {req.limit}, Results: {len(results)}, Total: {total}, Time: {elapsed:.2f} seconds")
         return {
             "query": req.query,
             "results": results,
