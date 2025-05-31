@@ -60,7 +60,11 @@ pipeline {
             }
             steps {
                 dir('backend/search_api') {
-                    sh 'pip install -r requirements.txt'
+                     sh '''
+                    python -m venv .venv
+                    .venv/bin/activate
+                    pip install -r requirements.txt
+                    '''
                 }
             }
         }
