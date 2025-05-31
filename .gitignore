@@ -27,3 +27,4 @@ dependency-check-report.xml
 frontend@tmp/
 crawler-indexer@tmp/
 search-api@tmp/
+/Jenkins-Server-Terraform/.terraform.lock.hcl

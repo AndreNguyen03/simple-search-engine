@@ -53,7 +53,22 @@ pipeline {
                 git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
+        stage('Build') {
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
+            }
+        }
 
+        stage('Test') {
+            steps {
+                dir('frontend') {
+                    sh 'npm test'
+                }
+            }
+        }
         stage('Sonarqube Analysis') {
             steps {
                 dir('frontend') {

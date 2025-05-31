@@ -51,6 +51,31 @@ pipeline {
                 git branch: 'main',credentialsId: 'GITHUB', url: 'https://github.com/AndreNguyen03/simple-search-engine.git'
             }
         }
+        stage('Install dependencies') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                }
+            }
+            steps {
+                dir('backend/crawler_indexer') {
+                    sh 'pip install -r requirements.txt'
+                }
+            }
+        }
+
+        stage('Run tests') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                }
+            }
+            steps {
+                dir('backend/crawler_indexer') {
+                    sh 'python -m unittest discover -s . -p "test_*.py" -v'
+                }
+            }
+        }
         stage('Sonarqube Analysis') {
             steps {
                 dir('backend/crawler_indexer') {
