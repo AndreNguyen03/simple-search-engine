@@ -60,11 +60,10 @@ pipeline {
             }
             steps {
                 dir('backend/search_api') {
-                     sh '''
+                    sh '''
                     python -m venv .venv
-                    chmod +x .venv/bin/activate
-                    .venv/bin/activate
-                    pip install -r requirements.txt
+                    .venv/bin/pip install --upgrade pip
+                    .venv/bin/pip install -r requirements.txt
                     '''
                 }
             }
@@ -78,7 +77,7 @@ pipeline {
             }
             steps {
                 dir('backend/search_api') {
-                    sh 'python -m unittest discover -s . -p "test_*.py" -v'
+                    sh '.venv/bin/python -m unittest discover -s . -p "test_*.py" -v'
                 }
             }
         }
