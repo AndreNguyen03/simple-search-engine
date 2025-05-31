@@ -61,6 +61,7 @@ pipeline {
                 dir('backend/crawler_indexer') {
                     sh '''
                     python -m venv .venv
+                    chmod +x .venv/bin/activate
                     .venv/bin/activate
                     pip install -r requirements.txt
                     '''
