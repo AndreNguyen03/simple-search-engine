@@ -54,6 +54,7 @@ def search(query: str, top_k: int = 20, page: int = 1) -> List[SearchResult]:
     # Chuẩn hóa vector truy vấn
     query_length = math.sqrt(sum(w ** 2 for w in query_weights.values()))
     print(f"Query vector length (before normalization): {query_length:.6f}")
+    
     if query_length == 0:
         print("Query vector length is zero, returning empty results")
         return [], 0, round(time.time() - start_time, 2)

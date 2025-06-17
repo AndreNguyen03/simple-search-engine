@@ -23,5 +23,4 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Expose port (nginx serves on 80)
 EXPOSE 80
 
-# Optionally override default nginx config
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+

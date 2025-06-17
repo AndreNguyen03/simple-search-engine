@@ -4,22 +4,20 @@ metadata:
   name: myapp-ingress
   namespace: search-engine
   annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
-  ingressClassName: alb
+  ingressClassName: nginx
   rules:
-    - http:  
+    - http:
         paths:
-          - path: /api
+          - path: /api(/|$)(.*)
             pathType: Prefix
             backend:
               service:
                 name: search-api
                 port:
                   number: 8000
-          - path: /
+          - path: /(.*)
             pathType: Prefix
             backend:
               service:
