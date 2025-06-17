@@ -3,14 +3,12 @@ kind: Ingress
 metadata:
   name: myapp-ingress
   namespace: search-engine
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /api
+          - path: /api/search
             pathType: Prefix
             backend:
               service:
